@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    domains: ['inspired-sunshine-587c5c91b5.media.strapiapp.com'],
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
