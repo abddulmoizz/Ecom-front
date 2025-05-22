@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import Header from './components/Header'; // Adjust path if needed
-import Footer from './components/Footer'; // Adjust path if needed
 
 const BACKGROUND_IMAGE_URL =
   'https://inspired-sunshine-587c5c91b5.media.strapiapp.com/image_2025_05_22_214653813_c05ef365ee.png';

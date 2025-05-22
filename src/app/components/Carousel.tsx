@@ -1,10 +1,17 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 
 const BASE_URL = 'https://inspired-sunshine-587c5c91b5.strapiapp.com';
 
 interface CarouselImage {
+  id: number;
+  url: string;
+  name: string;
+}
+
+interface RawImage {
   id: number;
   url: string;
   name: string;
@@ -15,7 +22,6 @@ export default function EcommerceCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Use a ref to keep track of the timer so we can reset it on manual navigation
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -24,7 +30,7 @@ export default function EcommerceCarousel() {
         const res = await fetch(`${BASE_URL}/api/galleries/?populate=*`);
         const data = await res.json();
         const imgs: CarouselImage[] =
-          data.data?.[0]?.carosel?.map((img: any) => ({
+          data.data?.[0]?.carosel?.map((img: RawImage) => ({
             id: img.id,
             url: img.url.startsWith('http') ? img.url : BASE_URL + img.url,
             name: img.name,
@@ -39,23 +45,21 @@ export default function EcommerceCarousel() {
     fetchImages();
   }, []);
 
-  // Function to reset the auto-slide timer
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-    }, 4000); // change image every 4 seconds
-  };
+    }, 4000);
+  }, [images.length]);
 
   useEffect(() => {
     if (images.length === 0) return;
     resetTimer();
 
-    // Cleanup timer on unmount or on images change
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [currentIndex, images.length]);
+  }, [currentIndex, images.length, resetTimer]);
 
   function handlePrev() {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -73,16 +77,19 @@ export default function EcommerceCarousel() {
 
   return (
     <div className="max-w-lg mx-auto select-none relative">
-      {/* Image Container */}
-      <div className="relative rounded-lg shadow-lg overflow-hidden">
+      {/* Image container with fixed height */}
+      <div className="relative rounded-lg shadow-lg overflow-hidden h-96">
         {images.map((img, idx) => (
-          <img
+          <Image
             key={img.id}
             src={img.url}
             alt={img.name || `Carousel image ${idx + 1}`}
-            className={`w-full h-96 object-contain transition-opacity duration-500 ease-in-out absolute inset-0 ${
+            fill
+            style={{ objectFit: 'contain' }}
+            className={`transition-opacity duration-500 ease-in-out absolute inset-0 ${
               idx === currentIndex ? 'opacity-100 relative' : 'opacity-0 pointer-events-none'
             }`}
+            priority={idx === currentIndex}
           />
         ))}
 

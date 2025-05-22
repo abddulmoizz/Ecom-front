@@ -2,6 +2,7 @@
 
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import Image from 'next/image';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
@@ -40,6 +41,45 @@ interface Product {
   releaseDate?: string;
 }
 
+// Define proper types for API response
+interface StrapiProductAttributes {
+  slug: string;
+  title: string;
+  price: string;
+  Description: { type: string; children: { text: string }[] }[];
+  images: ProductImage[];
+  catagory?: {
+    id: number;
+    Name: string;
+  };
+  size: Size[];
+  series?: string;
+  isNew?: boolean;
+  releaseDate?: string;
+}
+
+interface StrapiProductResponse {
+  id: number;
+  attributes?: StrapiProductAttributes;
+  slug?: string;
+  title?: string;
+  price?: string;
+  Description?: { type: string; children: { text: string }[] }[];
+  images?: ProductImage[];
+  catagory?: {
+    id: number;
+    Name: string;
+  };
+  size?: Size[];
+  series?: string;
+  isNew?: boolean;
+  releaseDate?: string;
+}
+
+interface StrapiApiResponse {
+  data: StrapiProductResponse[];
+}
+
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
@@ -58,16 +98,30 @@ export default function ProductDetailPage() {
       try {
         const res = await fetch(`${BASE_URL}/api/products?populate=*`);
         if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
+        const data: StrapiApiResponse = await res.json();
 
         // Find product by slug inside nested data
         const matched = data.data.find(
-          (p: any) => p.attributes?.slug === slug || p.slug === slug
+          (p: StrapiProductResponse) => p.attributes?.slug === slug || p.slug === slug
         );
 
         // Strapi response might nest attributes — adjust accordingly
         if (matched) {
-          const prod = matched.attributes ? { ...matched.attributes, id: matched.id } : matched;
+          const prod: Product = matched.attributes 
+            ? { ...matched.attributes, id: matched.id } 
+            : {
+                id: matched.id,
+                slug: matched.slug || '',
+                title: matched.title || '',
+                price: matched.price || '0',
+                Description: matched.Description || [],
+                images: matched.images || [],
+                catagory: matched.catagory,
+                size: matched.size || [],
+                series: matched.series,
+                isNew: matched.isNew,
+                releaseDate: matched.releaseDate
+              };
           setProduct(prod);
         } else {
           setProduct(null);
@@ -145,10 +199,6 @@ export default function ProductDetailPage() {
       </p>
     );
 
-  // Secondary images exclude current main image
-  // (not used currently, but you can extend for thumbnails or similar)
-  // const secondaryImages = images.filter((_, idx) => idx !== currentImageIndex);
-
   return (
     <>
       <Header />
@@ -159,21 +209,29 @@ export default function ProductDetailPage() {
             <div className="relative bg-gray-100 rounded-xl overflow-hidden aspect-square flex items-center justify-center">
               {images.length > 0 ? (
                 <>
-                  <img
-                    src={getImageUrl(images[currentImageIndex]) || '/placeholder.png'}
-                    alt={product.title}
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${
-                      fade ? 'opacity-100' : 'opacity-0'
-                    }`}
-                    loading="lazy"
-                  />
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={getImageUrl(images[currentImageIndex]) || '/placeholder.png'}
+                      alt={product.title}
+                      fill
+                      className={`object-cover transition-opacity duration-300 ${
+                        fade ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder.png';
+                      }}
+                    />
+                  </div>
                   {/* Prev Button */}
                   <button
                     onClick={() => {
                       changeImage(false);
                       resetTimer();
                     }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-60 text-white rounded-full p-3 hover:bg-opacity-80 transition select-none shadow-lg"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-60 text-white rounded-full p-3 hover:bg-opacity-80 transition select-none shadow-lg z-10"
                     aria-label="Previous image"
                     type="button"
                   >
@@ -185,14 +243,14 @@ export default function ProductDetailPage() {
                       changeImage(true);
                       resetTimer();
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-60 text-white rounded-full p-3 hover:bg-opacity-80 transition select-none shadow-lg"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-60 text-white rounded-full p-3 hover:bg-opacity-80 transition select-none shadow-lg z-10"
                     aria-label="Next image"
                     type="button"
                   >
                     ›
                   </button>
                   {/* Image indicators */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
                     {images.map((_, idx) => (
                       <button
                         key={idx}
@@ -231,7 +289,7 @@ export default function ProductDetailPage() {
                     setCurrentImageIndex(idx);
                     resetTimer();
                   }}
-                  className={`flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden transition ${
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden transition relative ${
                     idx === currentImageIndex
                       ? 'border-black'
                       : 'border-transparent hover:border-gray-500'
@@ -239,11 +297,17 @@ export default function ProductDetailPage() {
                   aria-label={`Select variant ${idx + 1}`}
                   type="button"
                 >
-                  <img
+                  <Image
                     src={getImageUrl(img) || '/placeholder.png'}
                     alt={`Variant ${idx + 1}`}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="64px"
                     loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder.png';
+                    }}
                   />
                 </button>
               ))}
@@ -290,7 +354,7 @@ export default function ProductDetailPage() {
             {product.size?.length > 0 && (
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wide mb-2">Select Size</p>
-                <div className="flex flex-wrap gap-3" role="list">
+                <div className="flex flex-wrap gap-3" role="group" aria-label="Size options">
                   {product.size.map((s) => (
                     <button
                       key={s.id}
@@ -301,8 +365,8 @@ export default function ProductDetailPage() {
                           : 'bg-white text-gray-800 border-gray-300 hover:border-gray-600'
                       }`}
                       type="button"
-                      role="listitem"
                       aria-pressed={selectedSize === s.size}
+                      aria-label={`Size ${s.size}`}
                     >
                       {s.size}
                     </button>

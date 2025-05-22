@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, memo, lazy, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -57,16 +58,18 @@ const ProductCard = memo(function ProductCard({
   onToggleHeart: (id: number) => void;
   getBestImageUrl: (images?: ProductImage[]) => string | null;
 }) {
+  const imageUrl = getBestImageUrl(product.images);
+
   return (
     <div className="relative bg-white border border-gray-200 rounded-xl flex flex-col items-center text-center select-none transition-all duration-300 hover:border-black cursor-pointer w-full max-w-[320px] mx-auto">
-      <span className="absolute top-3 sm:top-5 left-3 sm:left-5 text-xs font-semibold tracking-wider text-black">
+      <span className="absolute top-3 sm:top-5 left-3 sm:left-5 text-xs font-semibold tracking-wider text-black z-10">
         NEW
       </span>
 
       <button
         aria-label="Add to wishlist"
         onClick={() => onToggleHeart(product.id)}
-        className={`absolute top-3 sm:top-5 right-3 sm:right-5 transition ${
+        className={`absolute top-3 sm:top-5 right-3 sm:right-5 transition z-10 ${
           isHearted ? 'text-red-600' : 'text-gray-400 hover:text-red-600'
         }`}
         type="button"
@@ -87,19 +90,22 @@ const ProductCard = memo(function ProductCard({
         </svg>
       </button>
 
-      <Link href={`/product/${product.slug}`} className="w-full px-6 sm:px-10 py-6 sm:py-8" prefetch={false}>
-        <img
-          src={getBestImageUrl(product.images) || '/placeholder.png'}
-          alt={product.title}
-          className="w-full h-[200px] sm:h-[300px] object-contain"
-          draggable={false}
-          loading="lazy"
-          decoding="async"
-          fetchPriority="low"
-          onError={(e) => {
-            e.currentTarget.src = '/placeholder.png';
-          }}
-        />
+      <Link href={`/product/${product.slug}`} className="w-full px-6 sm:px-10 py-6 sm:py-8 relative" prefetch={false}>
+        <div className="w-full h-[200px] sm:h-[300px] relative">
+          <Image
+            src={imageUrl || '/placeholder.png'}
+            alt={product.title}
+            fill
+            className="object-contain"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 320px"
+            loading="lazy"
+            onError={(e) => {
+              // Fallback to regular img if Next.js Image fails
+              const target = e.target as HTMLImageElement;
+              target.src = '/placeholder.png';
+            }}
+          />
+        </div>
       </Link>
 
       <h3 className="uppercase font-bold text-base sm:text-lg tracking-wide mb-2 px-2 sm:px-4 text-black leading-tight">
@@ -302,6 +308,37 @@ export default function HomePage() {
         <div className="mb-8 sm:mb-12 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-wide text-black">L I N E U P</h2>
         </div>
+
+        {/* Category Filter Section - Only show if toggleCategory is needed */}
+        {categories.length > 1 && (
+          <div className="mb-8 text-center">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
+              <button
+                onClick={() => toggleCategory('all')}
+                className={`px-4 py-2 rounded-md transition ${
+                  selectedCategoryIds.length === 0
+                    ? 'bg-black text-white'
+                    : 'bg-gray-200 text-black hover:bg-gray-300'
+                }`}
+              >
+                All
+              </button>
+              {categories.map(category => (
+                <button
+                  key={category.id}
+                  onClick={() => toggleCategory(category.id)}
+                  className={`px-4 py-2 rounded-md transition ${
+                    selectedCategoryIds.includes(category.id)
+                      ? 'bg-black text-white'
+                      : 'bg-gray-200 text-black hover:bg-gray-300'
+                  }`}
+                >
+                  {category.Name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {filteredProducts.length === 0 ? (
           <p className="text-black text-center text-lg">No products found.</p>
