@@ -23,6 +23,22 @@ interface Category {
   products: Product[];
 }
 
+interface Gallery {
+  id: number;
+  carosel?: GalleryImage[];
+}
+
+interface GalleryImage {
+  id: number;
+  url: string;
+  alternativeText?: string;
+  caption?: string;
+}
+
+interface GalleryApiResponse {
+  data: Gallery[];
+}
+
 const ProductCard = memo(function ProductCard({ 
   product, 
   isHearted, 
@@ -132,10 +148,10 @@ export default function HomePage() {
       setCategories(categoriesData.data || []);
 
       if (galleryRes.ok) {
-        const galleryData = await galleryRes.json();
+        const galleryData: GalleryApiResponse = await galleryRes.json();
         const avifImage = galleryData.data
-          ?.flatMap((gallery: any) => gallery.carosel || [])
-          ?.find((img: any) => img.url?.includes('gav01_1920x612_1_8a973f6ebb.avif'));
+          ?.flatMap((gallery: Gallery) => gallery.carosel || [])
+          ?.find((img: GalleryImage) => img.url?.includes('gav01_1920x612_1_8a973f6ebb.avif'));
         
         if (avifImage) {
           setBannerImage(avifImage.url.startsWith('http') ? avifImage.url : BASE_URL + avifImage.url);
