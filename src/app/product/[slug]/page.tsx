@@ -33,7 +33,7 @@ interface Product {
 interface StrapiProductResponse {
   id: number;
   attributes?: Partial<Product>;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export default function ProductDetailPage() {

@@ -14,83 +14,57 @@ interface Product {
   slug: string;
   title: string;
   price: string;
-  Description: { type: string; children: { text: string }[] }[];
-  images?: {
-    url: string;
-    formats?: {
-      thumbnail?: { url: string };
-      small?: { url: string };
-      medium?: { url: string };
-      large?: { url: string };
-    };
-  }[];
+  images?: { url: string; formats?: Record<string, { url: string }> }[];
 }
 
 interface Category {
   id: number;
   Name: string;
-  slug: string;
   products: Product[];
 }
 
-interface GalleryImage {
-  id: number;
-  url: string;
-  formats?: {
-    large?: { url: string };
-    medium?: { url: string };
-    small?: { url: string };
-    thumbnail?: { url: string };
-  };
-  width?: number;
-  height?: number;
-}
-
-interface Gallery {
-  id: number;
-  carosel: GalleryImage[];
-}
-
-const ProductCard = memo(function ProductCard({ product, isHearted, onToggleHeart, getBestImageUrl }: {
+const ProductCard = memo(function ProductCard({ 
+  product, 
+  isHearted, 
+  onToggleHeart, 
+  getBestImageUrl 
+}: {
   product: Product;
   isHearted: boolean;
   onToggleHeart: (id: number) => void;
   getBestImageUrl: (images?: Product['images']) => string | null;
 }) {
   return (
-    <div className="relative bg-white border border-gray-200 rounded-xl flex flex-col items-center text-center select-none transition-all duration-300 hover:border-black cursor-pointer w-full max-w-[320px] mx-auto">
+    <div className="relative bg-white border border-gray-200 rounded-xl flex flex-col items-center text-center transition-all duration-300 hover:border-black cursor-pointer w-full max-w-[320px] mx-auto">
       <span className="absolute top-3 sm:top-5 left-3 sm:left-5 text-xs font-semibold tracking-wider text-black z-10">NEW</span>
       
       <button
-        aria-label="Add to wishlist"
         onClick={() => onToggleHeart(product.id)}
         className={`absolute top-3 sm:top-5 right-3 sm:right-5 transition z-10 ${isHearted ? 'text-red-600' : 'text-gray-400 hover:text-red-600'}`}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill={isHearted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6">
+        <svg fill={isHearted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
         </svg>
       </button>
 
-      <Link href={`/product/${product.slug}`} className="w-full px-6 sm:px-10 py-6 sm:py-8 relative" prefetch={false}>
+      <Link href={`/product/${product.slug}`} className="w-full px-6 sm:px-10 py-6 sm:py-8">
         <div className="w-full h-[200px] sm:h-[300px] relative">
           <Image
             src={getBestImageUrl(product.images) || '/placeholder.png'}
             alt={product.title}
             fill
             className="object-contain"
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 320px"
             loading="lazy"
-            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png'; }}
           />
         </div>
       </Link>
 
-      <h3 className="uppercase font-bold text-base sm:text-lg tracking-wide mb-2 px-2 sm:px-4 text-black leading-tight">{product.title}</h3>
+      <h3 className="uppercase font-bold text-base sm:text-lg tracking-wide mb-2 px-2 sm:px-4 text-black">{product.title}</h3>
       <p className="text-sm text-black mb-4 sm:mb-6">${product.price}</p>
 
-      <button className="w-full flex items-center justify-center gap-2 bg-black text-white py-2.5 sm:py-3 rounded-md uppercase font-semibold tracking-wider hover:bg-gray-900 transition text-xs sm:text-sm" onClick={(e) => e.preventDefault()}>
+      <button className="w-full flex items-center justify-center gap-2 bg-black text-white py-2.5 sm:py-3 rounded-md uppercase font-semibold tracking-wider hover:bg-gray-900 transition text-xs sm:text-sm">
         BUY NOW
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5">
+        <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 7M7 13l-2 9m5-9v9m4-9v9m5-9l2 9" />
         </svg>
       </button>
@@ -98,48 +72,42 @@ const ProductCard = memo(function ProductCard({ product, isHearted, onToggleHear
   );
 });
 
-const ProductSkeleton = memo(() => (
-  <div className="relative bg-white border border-gray-200 rounded-xl flex flex-col items-center text-center w-full max-w-[320px] mx-auto animate-pulse">
-    <div className="w-full px-6 sm:px-10 py-6 sm:py-8">
-      <div className="w-full h-[200px] sm:h-[300px] bg-gray-200 rounded"></div>
-    </div>
-    <div className="w-3/4 h-4 bg-gray-200 rounded mb-2"></div>
-    <div className="w-1/4 h-4 bg-gray-200 rounded mb-4 sm:mb-6"></div>
-    <div className="w-full h-10 sm:h-12 bg-gray-200 rounded"></div>
-  </div>
-));
+const BannerSkeleton = memo(function BannerSkeleton() {
+  return <div className="w-full aspect-[5/2] sm:aspect-[8/3] md:aspect-[12/4] bg-gray-200 animate-pulse" />;
+});
 
-const CarouselSkeleton = memo(() => (
-  <div className="w-full h-64 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
-    <span className="text-gray-400">Loading gallery...</span>
-  </div>
-));
-
-const BannerSkeleton = memo(() => (
-  <div className="w-full aspect-[5/2] sm:aspect-[8/3] md:aspect-[12/4] bg-gray-200 animate-pulse"></div>
-));
-
-const Banner = memo(function Banner({ bannerImage }: { bannerImage: string | null }) {
-  if (!bannerImage) {
-    return null;
-  }
-
+const SectionSkeleton = memo(function SectionSkeleton() {
   return (
-    <div className="w-full aspect-[5/2] sm:aspect-[8/3] md:aspect-[12/4] relative overflow-hidden">
-      <Image
-        src={bannerImage}
-        alt="Banner"
-        fill
-        className="object-cover"
-        sizes="100vw"
-        priority
-        onError={(e) => {
-          console.error('Banner image failed to load');
-          e.currentTarget.style.display = 'none';
-        }}
-      />
+    <section className="bg-black py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 lg:px-20">
+      <div className="max-w-[1200px] mx-auto text-center space-y-3">
+        <div className="h-8 sm:h-10 md:h-12 lg:h-14 bg-gray-700 rounded animate-pulse" />
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-4 sm:h-5 bg-gray-700 rounded animate-pulse" />
+        ))}
+      </div>
+    </section>
+  );
+});
+
+const ProductSkeleton = memo(function ProductSkeleton() {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl w-full max-w-[320px] mx-auto animate-pulse">
+      <div className="px-6 sm:px-10 py-6 sm:py-8">
+        <div className="w-full h-[200px] sm:h-[300px] bg-gray-200 rounded" />
+      </div>
+      <div className="space-y-2 px-4 pb-4">
+        <div className="w-3/4 h-4 bg-gray-200 rounded mx-auto" />
+        <div className="w-1/4 h-4 bg-gray-200 rounded mx-auto" />
+        <div className="w-full h-10 sm:h-12 bg-gray-200 rounded" />
+      </div>
     </div>
   );
+});
+
+const LoadingSkeleton = memo(function LoadingSkeleton({ type }: { type: 'banner' | 'product' | 'section' }) {
+  if (type === 'banner') return <BannerSkeleton />;
+  if (type === 'section') return <SectionSkeleton />;
+  return <ProductSkeleton />;
 });
 
 export default function HomePage() {
@@ -153,53 +121,37 @@ export default function HomePage() {
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-      // Fetch both categories and banner data simultaneously
       const [categoriesRes, galleryRes] = await Promise.all([
-        fetch(`${BASE_URL}/api/catagories?populate[products][populate]=images`, { 
-          signal: controller.signal,
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-        }),
-        fetch(`${BASE_URL}/api/galleries/?populate=*`, {
-          signal: controller.signal,
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-        })
+        fetch(`${BASE_URL}/api/catagories?populate[products][populate]=images`),
+        fetch(`${BASE_URL}/api/galleries/?populate=*`)
       ]);
 
-      clearTimeout(timeoutId);
-      
       if (!categoriesRes.ok) throw new Error(`Categories API error! status: ${categoriesRes.status}`);
       
       const categoriesData = await categoriesRes.json();
       setCategories(categoriesData.data || []);
 
-      // Handle gallery data for banner
       if (galleryRes.ok) {
         const galleryData = await galleryRes.json();
-        
-        // Find the AVIF image (gav01-1920x612)
         const avifImage = galleryData.data
-          ?.flatMap((gallery: Gallery) => gallery.carosel || [])
-          ?.find((img: GalleryImage) => img.url?.includes('gav01_1920x612_1_8a973f6ebb.avif'));
+          ?.flatMap((gallery: any) => gallery.carosel || [])
+          ?.find((img: any) => img.url?.includes('gav01_1920x612_1_8a973f6ebb.avif'));
         
         if (avifImage) {
-          const imageUrl = avifImage.url.startsWith('http') 
-            ? avifImage.url 
-            : BASE_URL + avifImage.url;
-          setBannerImage(imageUrl);
+          setBannerImage(avifImage.url.startsWith('http') ? avifImage.url : BASE_URL + avifImage.url);
         }
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load data');
+      setError('Failed to load data');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { 
+    fetchData(); 
+  }, [fetchData]);
 
   const toggleCategory = useCallback((id: number | 'all') => {
     setSelectedCategoryIds(prev => 
@@ -224,41 +176,27 @@ export default function HomePage() {
   const toggleHeart = useCallback((id: number) => {
     setHeartedIds(prev => {
       const newSet = new Set(prev);
-      newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
       return newSet;
     });
   }, []);
-
-  const handleRetry = useCallback(() => {
-    setLoading(true);
-    fetchData();
-  }, [fetchData]);
 
   if (loading) {
     return (
       <>
         <Header />
-        {/* Banner at the very top */}
-        <BannerSkeleton />
-        
-        {/* Black section skeleton */}
-        <section className="bg-black py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 lg:px-20">
-          <div className="max-w-[1200px] mx-auto text-center">
-            <div className="h-8 sm:h-10 md:h-12 lg:h-14 bg-gray-700 rounded mb-6 sm:mb-8 md:mb-10 animate-pulse"></div>
-            <div className="space-y-3 max-w-5xl mx-auto">
-              <div className="h-4 sm:h-5 bg-gray-700 rounded animate-pulse"></div>
-              <div className="h-4 sm:h-5 bg-gray-700 rounded animate-pulse"></div>
-              <div className="h-4 sm:h-5 bg-gray-700 rounded animate-pulse w-4/5 mx-auto"></div>
-            </div>
-          </div>
-        </section>
-        
+        <LoadingSkeleton type="banner" />
+        <LoadingSkeleton type="section" />
         <main className="bg-white px-4 sm:px-6 md:px-12 lg:px-20 py-8 sm:py-12 min-h-screen max-w-[1400px] mx-auto">
           <div className="mb-8 sm:mb-12 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-wide text-black">L I N E U P</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-10 gap-y-12 sm:gap-y-20 justify-center max-w-[400px] sm:max-w-[700px] mx-auto px-4 sm:px-0">
-            {Array.from({ length: 6 }).map((_, i) => <ProductSkeleton key={i} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-10 gap-y-12 sm:gap-y-20 max-w-[400px] sm:max-w-[700px] mx-auto">
+            {Array.from({ length: 6 }).map((_, i) => <LoadingSkeleton key={i} type="product" />)}
           </div>
         </main>
         <Footer />
@@ -274,7 +212,9 @@ export default function HomePage() {
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold text-red-600 mb-4">Failed to load products</h2>
             <p className="text-gray-600 mb-6">{error}</p>
-            <button onClick={handleRetry} className="px-6 py-3 bg-black text-white rounded hover:bg-gray-800 transition">Try Again</button>
+            <button onClick={fetchData} className="px-6 py-3 bg-black text-white rounded hover:bg-gray-800 transition">
+              Try Again
+            </button>
           </div>
         </main>
         <Footer />
@@ -285,23 +225,22 @@ export default function HomePage() {
   return (
     <>
       <Header />
-      {/* Banner positioned right below header */}
-      <Banner bannerImage={bannerImage} />
       
-      {/* Black section with text content */}
+      {bannerImage && (
+        <div className="w-full aspect-[5/2] sm:aspect-[8/3] md:aspect-[12/4] relative overflow-hidden">
+          <Image src={bannerImage} alt="Banner" fill className="object-cover" priority />
+        </div>
+      )}
+      
       <section className="bg-black text-white py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 lg:px-20">
         <div className="max-w-[1200px] mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 leading-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 md:mb-10">
             Redefining toughness with a strikingly original design
           </h2>
           <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-300 max-w-5xl mx-auto">
             Everyone counts on G-SHOCK for unceasing evolution. But check out this comprehensive new reinterpretation, 
-            representing a whole new approach to construction and design that powerfully conveys the brand's unwavering 
-            commitment to toughness. The GAV01 features an exterior with an organic form bringing together components 
-            with sharply defined edges, combined with a large, full-screen LCD topped by a metallic dial with openwork and 
-            employing the newly developed Shock Release Hand, among other features. With its strikingly innovative and 
-            original design concept, the GAV01 exudes G-SHOCK toughness, restating the brand's never-ending spirit of 
-            challenge and commitment to delivering strength.
+            representing a whole new approach to construction and design that powerfully conveys the brand&apos;s unwavering 
+            commitment to toughness.
           </p>
         </div>
       </section>
@@ -336,7 +275,7 @@ export default function HomePage() {
         {filteredProducts.length === 0 ? (
           <p className="text-black text-center text-lg">No products found.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-10 gap-y-12 sm:gap-y-20 justify-center max-w-[400px] sm:max-w-[700px] mx-auto px-4 sm:px-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-10 gap-y-12 sm:gap-y-20 max-w-[400px] sm:max-w-[700px] mx-auto">
             {filteredProducts.map(product => (
               <ProductCard
                 key={product.id}
@@ -349,9 +288,9 @@ export default function HomePage() {
           </div>
         )}
 
-        <section className="mt-16 sm:mt-20 text-center px-4 sm:px-0">
+        <section className="mt-16 sm:mt-20 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-wide text-black mb-6 sm:mb-8">G A L L E R Y</h2>
-          <Suspense fallback={<CarouselSkeleton />}>
+          <Suspense fallback={<div className="w-full h-64 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center"><span className="text-gray-400">Loading gallery...</span></div>}>
             <Carousel />
           </Suspense>
         </section>
