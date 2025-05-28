@@ -24,6 +24,10 @@ export default function EcommerceCarousel() {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Touch refs
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
   useEffect(() => {
     async function fetchImages() {
       try {
@@ -71,14 +75,42 @@ export default function EcommerceCarousel() {
     resetTimer();
   }
 
-  if (loading) return <div className="text-center py-20">Loading...</div>;
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.changedTouches[0].clientX;
+  };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+
+    const distance = touchStartX.current - touchEndX.current;
+    const threshold = 50;
+
+    if (distance > threshold) {
+      handleNext(); // Swiped left
+    } else if (distance < -threshold) {
+      handlePrev(); // Swiped right
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  if (loading) return <div className="text-center py-20">Loading...</div>;
   if (images.length === 0) return <div className="text-center py-20">No images found.</div>;
 
   return (
     <div className="max-w-lg mx-auto select-none relative">
-      {/* Image container with fixed height */}
-      <div className="relative rounded-lg shadow-lg overflow-hidden h-96">
+      <div
+        className="relative rounded-lg shadow-lg overflow-hidden h-96"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {images.map((img, idx) => (
           <Image
             key={img.id}
@@ -93,7 +125,6 @@ export default function EcommerceCarousel() {
           />
         ))}
 
-        {/* Left Arrow */}
         <button
           onClick={handlePrev}
           aria-label="Previous Image"
@@ -112,7 +143,6 @@ export default function EcommerceCarousel() {
           </svg>
         </button>
 
-        {/* Right Arrow */}
         <button
           onClick={handleNext}
           aria-label="Next Image"
@@ -132,7 +162,6 @@ export default function EcommerceCarousel() {
         </button>
       </div>
 
-      {/* Dots Navigation */}
       <div className="flex justify-center space-x-3 mt-4">
         {images.map((_, idx) => (
           <button
