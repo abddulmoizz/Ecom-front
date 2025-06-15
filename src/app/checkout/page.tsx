@@ -46,6 +46,32 @@ interface Product {
   }
 }
 
+interface SeoMeta {
+  metaTitle?: string
+  metaDescription?: string
+  metaImage?: unknown
+  metaSocial?: unknown[]
+  keywords?: string
+  metaRobots?: string
+  structuredData?: unknown
+  metaViewport?: string
+  canonicalURL?: string
+}
+
+interface SizeOption {
+  id?: number
+  size?: string
+  stock?: number
+}
+
+interface DescriptionBlock {
+  type: string
+  children: Array<{
+    text: string
+    type?: string
+  }>
+}
+
 interface ApiProduct {
   id: number
   attributes: {
@@ -62,12 +88,12 @@ interface ApiProduct {
     catagory?: {
       Name: string
     }
-    Description?: any[]
+    Description?: DescriptionBlock[]
     createdAt?: string
     updatedAt?: string
     publishedAt?: string
-    seoMeta?: any
-    size?: any[]
+    seoMeta?: SeoMeta
+    size?: SizeOption[]
   }
 }
 
