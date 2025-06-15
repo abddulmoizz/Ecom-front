@@ -4,7 +4,7 @@ import Header from "../../components/Header"
 import Footer from "../../components/Footer"
 import ProductDetailClient from "../../components/ProductDetailClient"
 
-const BASE_URL = "https://inspired-sunshine-587c5c91b5.strapiapp.com"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface Product {
   id: number

@@ -4,8 +4,7 @@ import { useState, useMemo, useCallback, memo } from "react"
 import Link from "next/link"
 import Image from "next/image"
 
-const BASE_URL = "https://inspired-sunshine-587c5c91b5.strapiapp.com"
-
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 interface Product {
   id: number
   slug: string
