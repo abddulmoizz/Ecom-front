@@ -29,14 +29,55 @@ interface PaymentInfo {
   nameOnCard: string
 }
 
+interface Product {
+  id: number
+  title: string
+  price: string
+  slug: string
+  images: Array<{
+    url: string
+    formats?: {
+      small?: { url: string }
+      thumbnail?: { url: string }
+    }
+  }>
+  catagory?: {
+    Name: string
+  }
+}
+
+interface ApiProduct {
+  id: number
+  attributes: {
+    title: string
+    price: string
+    slug: string
+    images: Array<{
+      url: string
+      formats?: {
+        small?: { url: string }
+        thumbnail?: { url: string }
+      }
+    }>
+    catagory?: {
+      Name: string
+    }
+    Description?: any[]
+    createdAt?: string
+    updatedAt?: string
+    publishedAt?: string
+    seoMeta?: any
+    size?: any[]
+  }
+}
+
 export default function CheckoutPage() {
-  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount, clearCart } = useCart()
+  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount } = useCart()
   const [mounted, setMounted] = useState(false)
-  const [directProduct, setDirectProduct] = useState<any>(null)
+  const [directProduct, setDirectProduct] = useState<Product | null>(null)
   const [directQuantity, setDirectQuantity] = useState(1)
   const [directSize, setDirectSize] = useState<string | null>(null)
   const [isDirectCheckout, setIsDirectCheckout] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     firstName: "",
     lastName: "",
@@ -67,27 +108,32 @@ export default function CheckoutPage() {
       setIsDirectCheckout(true)
       setDirectQuantity(Number.parseInt(quantity || "1"))
       setDirectSize(size)
-      setLoading(true)
 
       // Fetch the specific product
       fetch(`${BASE_URL}/api/products?populate=*`)
         .then((res) => res.json())
-        .then(({ data }) => {
-          const product = data.find((p: any) => p.attributes?.slug === productSlug || p.slug === productSlug)
+        .then(({ data }: { data: ApiProduct[] }) => {
+          const product = data.find((p: ApiProduct) => p.attributes.slug === productSlug)
 
           if (product) {
-            const prod = product.attributes ? { ...product.attributes, id: product.id } : product
+            const prod: Product = {
+              id: product.id,
+              title: product.attributes.title,
+              price: product.attributes.price,
+              slug: product.attributes.slug,
+              images: product.attributes.images,
+              catagory: product.attributes.catagory
+            }
             setDirectProduct(prod)
           }
         })
         .catch((err) => console.error("Error loading product:", err))
-        .finally(() => setLoading(false))
     }
 
     setMounted(true)
   }, [])
 
-  const getImageUrl = (image: any) => {
+  const getImageUrl = (image: Product['images'][0]) => {
     if (!image) return null
     const imageUrl = image.formats?.small?.url || image.formats?.thumbnail?.url || image.url
     return imageUrl?.startsWith("http") ? imageUrl : `${BASE_URL}${imageUrl}`

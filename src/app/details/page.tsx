@@ -5,6 +5,7 @@ import ProductGrid from "../components/ProductGrid"
 import ServerCarousel from "../components/ServerCarousel"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface Product {
   id: number
   slug: string
@@ -27,6 +28,7 @@ interface Gallery {
 interface GalleryImage {
   id: number
   url: string
+  name?: string
   alternativeText?: string
   caption?: string
 }
@@ -81,7 +83,7 @@ async function getGalleryImages(): Promise<GalleryImage[]> {
 
     const data = await res.json()
     return (
-      data.data?.[0]?.carosel?.map((img: any) => ({
+      data.data?.[0]?.carosel?.map((img: GalleryImage) => ({
         id: img.id,
         url: img.url.startsWith("http") ? img.url : BASE_URL + img.url,
         name: img.name,

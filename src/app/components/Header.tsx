@@ -5,6 +5,23 @@ import Link from "next/link"
 import { useCart } from "../../context/CartContext"
 import Image from "next/image"
 
+// Type definitions for the image structure
+interface ImageFormat {
+  url: string
+}
+
+interface ImageFormats {
+  small?: ImageFormat
+  thumbnail?: ImageFormat
+  medium?: ImageFormat
+  large?: ImageFormat
+}
+
+interface ProductImage {
+  url: string
+  formats?: ImageFormats
+}
+
 export default function Header() {
   const [searchTerm, setSearchTerm] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -302,7 +319,7 @@ export default function Header() {
                   <div className="space-y-4">
                     {cart.map((item) => {
                       const BASE_URL = "https://inspired-sunshine-587c5c91b5.strapiapp.com"
-                      const getImageUrl = (image: any) => {
+                      const getImageUrl = (image: ProductImage | null | undefined): string | null => {
                         if (!image) return null
                         const imageUrl = image.formats?.small?.url || image.formats?.thumbnail?.url || image.url
                         return imageUrl?.startsWith("http") ? imageUrl : `${BASE_URL}${imageUrl}`
